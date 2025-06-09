@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  phone            String?
+  altPhone         String?
+  firstName        String
+  lastName         String
+  companyName      String?
+  address          String?
+  state            String?
+  pin              String?
+  country          String?
+  defaultCurrency  String?
+  pan              String?
+  gst              String?
+  nationalId       String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  accounts         TransactionAccount[]
+  headers          Header[]
+  tags             Tag[]
+  entities         SourceDestinationEntity[]
+  transactions     Transaction[]
+  budgets          Budget[]
+}
+
+model TransactionAccount {
+  id               String   @id @default(uuid())
+  type             String
+  name             String
+  accountNumber    String?
+  details          String?
+  upiLinks         String[]
+  status           String   // Active, Frozen, Closed
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  owner            User     @relation(fields: [ownerId], references: [id])
+  ownerId          String
+  transactions     Transaction[]
+  budgets          Budget[]
+}
+
+model Header {
+  id               String   @id @default(uuid())
+  name             String
+  details          String?
+  status           String   // Active, Not Active
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  owner            User     @relation(fields: [ownerId], references: [id])
+  ownerId          String
+  transactions     Transaction[]
+  budgets          Budget[]
+}
+
+model Tag {
+  id               String   @id @default(uuid())
+  name             String
+  details          String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  owner            User     @relation(fields: [ownerId], references: [id])
+  ownerId          String
+  transactions     Transaction[]
+  budgets          Budget[]        // Added relation to Budget
+}
+
+model SourceDestinationEntity {
+  id               String   @id @default(uuid())
+  name             String
+  gst              String?
+  pan              String?
+  address          String?
+  state            String?
+  pin              String?
+  country          String?
+  nationalId       String?
+  details          String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  owner            User     @relation(fields: [ownerId], references: [id])
+  ownerId          String
+  transactions     Transaction[]
+  budgets          Budget[] // Added relation to Budget
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  amount           Float
+  type             String   // Credit / Debit
+  details          String?
+  transferId       String?
+  status           String   // Complete, Pending
+  receiptUrls      String[] // URLs to uploaded receipts
+  transactionDate  DateTime
+  entryDate        DateTime @default(now())
+
+  // Relations
+  account          TransactionAccount @relation(fields: [accountId], references: [id])
+  accountId        String
+
+  header           Header?             @relation(fields: [headerId], references: [id])
+  headerId         String?
+
+  tag              Tag?                @relation(fields: [tagId], references: [id])
+  tagId            String?
+
+  entity           SourceDestinationEntity? @relation(fields: [entityId], references: [id])
+  entityId         String?
+
+  budget           Budget?             @relation(fields: [budgetId], references: [id])
+  budgetId         String?
+
+  owner            User                @relation(fields: [ownerId], references: [id])
+  ownerId          String
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Budget {
+  id               String   @id @default(uuid())
+  amount           Float
+  type             String   // Credit / Debit
+  details          String?
+  status           String   // Complete (Exact, Underpaid, Overpaid), Partial, etc.
+  transactionDate  DateTime
+  entryDate        DateTime @default(now())
+
+  // Relations
+  account          TransactionAccount @relation(fields: [accountId], references: [id])
+  accountId        String
+
+  header           Header?            @relation(fields: [headerId], references: [id])
+  headerId         String?
+
+  tag              Tag?               @relation(fields: [tagId], references: [id])
+  tagId            String?
+
+  entity           SourceDestinationEntity? @relation(fields: [entityId], references: [id])
+  entityId         String?
+
+  owner            User               @relation(fields: [ownerId], references: [id])
+  ownerId          String
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  transactions     Transaction[]
+}
+
+model ApiCallLog {
+  id               String   @id @default(uuid())
+  userId           String?
+  endpoint         String
+  method           String
+  requestPayload   Json
+  responsePayload  Json
+  ipAddress        String
+  statusCode       Int
+  errorMessage     String?
+  errorSource      String?
+  sessionId        String?
+  timestamp        DateTime @default(now())
+  processingTime   Int
+}
