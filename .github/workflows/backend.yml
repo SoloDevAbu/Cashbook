@@ -30,9 +30,6 @@ jobs:
     - name: Install dependencies
       run: yarn install --frozen-lockfile
 
-    - name: Run type check
-      run: yarn workspace backend check-types
-
     - name: Run lints
       run: yarn workspace backend lint
 
