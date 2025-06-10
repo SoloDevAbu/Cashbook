@@ -17,24 +17,24 @@ datasource db {
 model User {
   id               String   @id @default(uuid())
   email            String   @unique
-  phone            String?
+  phone            String
   altPhone         String?
   firstName        String
   lastName         String
-  companyName      String?
-  address          String?
-  state            String?
-  pin              String?
-  country          String?
+  password         String
+  companyName      String
+  address          String
+  state            String
+  pin              String
+  country          String
   defaultCurrency  String?
-  pan              String?
+  pan              String
   gst              String?
-  nationalId       String?
+  nationalId       String
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  // Relations
   accounts         TransactionAccount[]
   headers          Header[]
   tags             Tag[]
@@ -45,99 +45,113 @@ model User {
 
 model TransactionAccount {
   id               String   @id @default(uuid())
-  type             String
+  type             TransactionAccountType
   name             String
-  accountNumber    String?
+  accountNumber    String
   details          String?
   upiLinks         String[]
-  status           String   // Active, Frozen, Closed
-
+  status           TransactionAccountStatus
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  // Relations
   owner            User     @relation(fields: [ownerId], references: [id])
   ownerId          String
   transactions     Transaction[]
   budgets          Budget[]
 }
 
+enum TransactionAccountType {
+  CASH
+  BANK_SB
+  BANK_CREDIT
+  DEMAT
+  TRADING
+  LOAN
+  CREDIT_CARD
+  UPI
+  OTHER
+}
+
+enum TransactionAccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
 model Header {
   id               String   @id @default(uuid())
-  name             String
+  name             String   @unique
   details          String?
-  status           String   // Active, Not Active
-
+  status           HeaderStatus
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  // Relations
   owner            User     @relation(fields: [ownerId], references: [id])
   ownerId          String
   transactions     Transaction[]
   budgets          Budget[]
+}
+
+enum HeaderStatus {
+  ACTIVE
+  NOT_ACTIVE
 }
 
 model Tag {
   id               String   @id @default(uuid())
   name             String
   details          String?
-
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  // Relations
   owner            User     @relation(fields: [ownerId], references: [id])
   ownerId          String
   transactions     Transaction[]
-  budgets          Budget[]        // Added relation to Budget
+  budgets          Budget[]
 }
 
 model SourceDestinationEntity {
   id               String   @id @default(uuid())
   name             String
-  gst              String?
-  pan              String?
-  address          String?
-  state            String?
-  pin              String?
-  country          String?
-  nationalId       String?
+  gst              String
+  pan              String
+  address          String
+  state            String
+  pin              String
+  country          String
+  nationalId       String
   details          String?
-
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  // Relations
   owner            User     @relation(fields: [ownerId], references: [id])
   ownerId          String
   transactions     Transaction[]
-  budgets          Budget[] // Added relation to Budget
+  budgets          Budget[]
 }
 
 model Transaction {
   id               String   @id @default(uuid())
-  amount           Float
-  type             String   // Credit / Debit
+  amount           Int
+  type             TransactionType
   details          String?
   transferId       String?
-  status           String   // Complete, Pending
+  status           TransactionStatus
   receiptUrls      String[] // URLs to uploaded receipts
   transactionDate  DateTime
   entryDate        DateTime @default(now())
 
-  // Relations
   account          TransactionAccount @relation(fields: [accountId], references: [id])
   accountId        String
 
-  header           Header?             @relation(fields: [headerId], references: [id])
-  headerId         String?
+  header           Header             @relation(fields: [headerId], references: [id])
+  headerId         String
 
-  tag              Tag?                @relation(fields: [tagId], references: [id])
-  tagId            String?
+  tag              Tag                @relation(fields: [tagId], references: [id])
+  tagId            String
 
-  entity           SourceDestinationEntity? @relation(fields: [entityId], references: [id])
-  entityId         String?
+  entity           SourceDestinationEntity @relation(fields: [entityId], references: [id])
+  entityId         String
 
   budget           Budget?             @relation(fields: [budgetId], references: [id])
   budgetId         String?
@@ -149,27 +163,36 @@ model Transaction {
   updatedAt        DateTime @updatedAt
 }
 
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionStatus {
+  COMPLETE
+  PENDING
+}
+
 model Budget {
   id               String   @id @default(uuid())
   amount           Float
-  type             String   // Credit / Debit
+  type             BudgetType
   details          String?
-  status           String   // Complete (Exact, Underpaid, Overpaid), Partial, etc.
+  status           BudgetStatus
   transactionDate  DateTime
   entryDate        DateTime @default(now())
 
-  // Relations
   account          TransactionAccount @relation(fields: [accountId], references: [id])
   accountId        String
 
-  header           Header?            @relation(fields: [headerId], references: [id])
-  headerId         String?
+  header           Header            @relation(fields: [headerId], references: [id])
+  headerId         String
 
-  tag              Tag?               @relation(fields: [tagId], references: [id])
-  tagId            String?
+  tag              Tag               @relation(fields: [tagId], references: [id])
+  tagId            String
 
-  entity           SourceDestinationEntity? @relation(fields: [entityId], references: [id])
-  entityId         String?
+  entity           SourceDestinationEntity @relation(fields: [entityId], references: [id])
+  entityId         String
 
   owner            User               @relation(fields: [ownerId], references: [id])
   ownerId          String
@@ -178,6 +201,21 @@ model Budget {
   updatedAt        DateTime @updatedAt
 
   transactions     Transaction[]
+}
+
+enum BudgetType {
+  CREDIT
+  DEBIT
+}
+
+enum BudgetStatus {
+  COMPLETE_EXACT
+  COMPLETE_UNDERPAID
+  COMPLETE_OVERPAID
+  PARTIALLY_PAID
+  STALLED
+  CANCELLED
+  UNDER_PROCESS
 }
 
 model ApiCallLog {
