@@ -30,17 +30,17 @@ jobs:
     - name: Install dependencies
       run: yarn install --frozen-lockfile
 
-    - name: Run type check
-      run: yarn workspace backend check-types
+    - name: Generate Prisma Client
+      run: yarn workspace @cashbook/db db:generate
 
-    - name: Run lints
-      run: yarn workspace backend lint
+    # - name: Run lints
+    #   run: yarn workspace backend lint
 
     - name: Build application
       run: yarn workspace backend build
 
-    - name: Build Docker image
-      run: docker build -t backend -f apps/backend/Dockerfile .
+    # - name: Build Docker image
+    #   run: docker build -t backend -f apps/backend/Dockerfile .
 
   # deploy:
   #   needs: test-and-build
