@@ -39,8 +39,8 @@ jobs:
     - name: Build application
       run: yarn workspace backend build
 
-    - name: Build Docker image
-      run: docker build -t backend -f apps/backend/Dockerfile .
+    # - name: Build Docker image
+    #   run: docker build -t backend -f apps/backend/Dockerfile .
 
   # deploy:
   #   needs: test-and-build
