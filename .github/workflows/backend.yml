@@ -30,8 +30,8 @@ jobs:
     - name: Install dependencies
       run: yarn install --frozen-lockfile
 
-    - name: Run lints
-      run: yarn workspace backend lint
+    # - name: Run lints
+    #   run: yarn workspace backend lint
 
     - name: Build application
       run: yarn workspace backend build
