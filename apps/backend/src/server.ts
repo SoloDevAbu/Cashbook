@@ -10,6 +10,7 @@ import tagRoutes from './routes/tag.route';
 import sourceDestinationRoutes from './routes/source.destination.route';
 import transactionRoutes from './routes/transaction.route';
 import budgetRoutes from './routes/budget.route';
+import { apiLogger } from './middlewares/api-logger.middleware';
 
 const app = express();
 
@@ -18,6 +19,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Add API logger middleware to track all requests
+app.use(apiLogger);
 
 const allowedOrigins = isProduction 
   ? [process.env.PRODUCTION_WEB_URL, process.env.PRODUCTION_MOBILE_URL].filter(Boolean)
@@ -34,7 +38,6 @@ app.use(cors({
     return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400
