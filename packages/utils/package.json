@@ -1,0 +1,8 @@
+{
+  "name": "@cashbook/utils",
+  "version": "1.0.0",
+  "description": "Cashbook Utilities folder",
+  "main": "index.ts",
+  "license": "MIT",
+  "exports": "./src/index.ts"
+}
