@@ -12,7 +12,7 @@ interface HeaderCardProps {
 
 export function HeaderCard({ header, onStatusChange }: HeaderCardProps) {
   return (
-    <Card>
+    <Card className="border border-gray-400">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{header.name}</CardTitle>
         {/* <Button variant="secondary" onClick={onEdit}>

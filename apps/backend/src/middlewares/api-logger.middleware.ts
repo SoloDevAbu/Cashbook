@@ -21,7 +21,7 @@ export const apiLogger = (req: Request, res: Response, next: NextFunction) => {
           userId: req.user?.id,
           endpoint: req.originalUrl,
           method: req.method,
-          requestPayload: req.body,
+          requestPayload: req.body || {},
           responsePayload: responseBody || {},
           ipAddress: req.ip || '',
           statusCode: res.statusCode,
