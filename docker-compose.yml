@@ -1,48 +1,39 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
-    ports:
-      - "8080:8080"
+  db:
+    image: postgres:15
+    restart: always
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      - postgres
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://backend:3000
-
-  mobile:
-    build:
-      context: .
-      dockerfile: apps/mobile/Dockerfile
-    ports:
-      - "19006:19006"
-    environment:
-      - NODE_ENV=development
-      - EXPO_PUBLIC_API_URL=http://backend:3000
-
-  postgres:
-    image: postgres:15-alpine
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: paymentuser
+      POSTGRES_PASSWORD: paymentpass
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=cashbook
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./apps/backend
+    environment:
+      DATABASE_URL: postgres://paymentuser:paymentpass@db:5432/paymentdb
+      PORT: 9902
+    # Add other backend envs as needed
+    ports:
+      - "9902:9902"
+    depends_on:
+      - db
+
+  web:
+    build: ./apps/web
+    environment:
+      REACT_APP_API_URL: http://localhost:9902
+      PORT: 9901
+    # Add other frontend envs as needed
+    ports:
+      - "9901:9901"
+    depends_on:
+      - backend
 
 volumes:
-  postgres_data:
+  pgdata:
