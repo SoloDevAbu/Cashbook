@@ -8,7 +8,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { LoginInput } from '@cashbook/validation';
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -24,9 +28,15 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
     try {
-      // TODO: Implement login logic
-      console.log(data);
-      router.push('/dashboard');
+      const result = await axios.post(`${BACKEND_URL}/api/auth/login`,
+         data
+        , {
+          withCredentials: true
+        }
+      );
+      if (result.data.success) {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error(error);
     } finally {

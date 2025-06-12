@@ -10,6 +10,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegistrationInput } from '@cashbook/validation';
 import { SelectInput } from '@cashbook/ui';
 import { currencies } from '@cashbook/utils';
+import dotenv from 'dotenv';
+import axios from 'axios';
+dotenv.config();
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +32,17 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegistrationInput) => {
     setIsLoading(true);
     try {
-      // TODO: Implement registration logic
-      console.log(data);
-      router.push('/dashboard');
+      const result = await axios.post(
+        `${BACKEND_URL}/api/auth/register`,
+        data,
+        {
+          withCredentials: true
+        }
+      );
+
+      if(result.data) {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error(error);
     } finally {
