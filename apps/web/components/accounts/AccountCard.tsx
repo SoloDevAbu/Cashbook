@@ -1,5 +1,5 @@
 // import { TransactionAccountType } from '@cashbook/db';
-import { Account } from '@cashbook/utils';
+import { Account, formatDate } from '@cashbook/utils';
 
 interface AccountCardProps {
   account: Account;
@@ -72,8 +72,7 @@ export function AccountCard({
           </div>
         </div>
       )}
-
-      <div className="text-sm text-gray-500">Created on {account.createdAt}</div>
+      <div className="text-sm text-gray-500">Added on {formatDate(account.createdAt)}</div>
     </div>
   );
 }

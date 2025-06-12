@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Cross2Icon } from '@radix-ui/react-icons';
+import { Cross2Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import { type UpdateAccountInput } from '@cashbook/validation';
 import { updateAccountSchema } from '@cashbook/validation';
 import { Account } from '@cashbook/utils';
@@ -26,6 +26,7 @@ export function EditAccountDialog({
 }: EditAccountDialogProps) {
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
@@ -36,7 +37,7 @@ export function EditAccountDialog({
       name: account.name,
       accountNumber: account.accountNumber,
       details: account.details,
-      upiLinks: account.upiLinks,
+      upiLinks: account.upiLinks || [''],
     },
   });
 
@@ -50,17 +51,27 @@ export function EditAccountDialog({
     }
   };
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'upiLinks',
+  });
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[55%] max-h-[85vh] w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
-          <Dialog.Title className="text-2xl font-bold">Edit Account</Dialog.Title>
-          <Dialog.Description className="mt-2 text-sm text-gray-600">
-            Update your account information below
-          </Dialog.Description>
+        <Dialog.Content className="fixed left-[50%] top-[50%] max-h-[85vh] w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white p-0 shadow-lg overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out">
+          <div className="flex flex-col max-h-[85vh]">
+            {/* Header */}
+            <div className="px-6 pt-6">
+              <Dialog.Title className="text-2xl font-bold">Edit Account</Dialog.Title>
+              <Dialog.Description className="mt-2 text-sm text-gray-600">
+                Update your account information below
+              </Dialog.Description>
+            </div>
 
-          <form onSubmit={handleSubmit(handleFormSubmit)} className="mt-6 space-y-4">
+          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
+              <form id="edit-account-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             <Input
               label="Account Name"
               type="text"
@@ -106,22 +117,56 @@ export function EditAccountDialog({
               error={errors.details?.message}
             />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">UPI Links</label>
-              <input
-                type="text"
-                placeholder="UPI links (one per line)"
-                className={`block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.upiLinks ? 'ring-red-500' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-transparent sm:text-sm sm:leading-6`}
-                {...register('upiLinks')}
-              />
-              {errors.upiLinks && (
-                <p className="text-sm text-red-500">{errors.upiLinks.message}</p>
-              )}
+            <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">UPI Links</label>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => append('')}
+                      className="flex items-center gap-1"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Add UPI Link
+                    </Button>
+                  </div>
+                  
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Enter UPI link"
+                          className={`block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
+                            errors.upiLinks?.[index] ? 'ring-red-500' : 'ring-gray-300'
+                          } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-transparent sm:text-sm sm:leading-6`}
+                          {...register(`upiLinks.${index}` as const)}
+                        />
+                        {errors.upiLinks?.[index] && (
+                          <p className="mt-1 text-sm text-red-500">{errors.upiLinks[index]?.message}</p>
+                        )}
+                      </div>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => remove(index)}
+                          className="self-start"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {typeof errors.upiLinks === 'string' && (
+                    <p className="text-sm text-red-500">{errors.upiLinks}</p>
+                  )}
+                </div>
+              </form>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            {/* Footer */}
+            <div className="mt-auto flex justify-end gap-3 border-t px-6 py-4">
               <Button
                 type="button"
                 variant="secondary"
@@ -132,12 +177,13 @@ export function EditAccountDialog({
               </Button>
               <Button
                 type="submit"
+                form="edit-account-form"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
-          </form>
+          </div>
 
           <Dialog.Close className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none">
             <Cross2Icon className="h-5 w-5" />
