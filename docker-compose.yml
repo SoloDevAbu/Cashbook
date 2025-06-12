@@ -14,7 +14,9 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    build: ./apps/backend
+    build: 
+      context: .
+      dockerfile: apps/backend/Dockerfile
     environment:
       DATABASE_URL: postgres://paymentuser:paymentpass@db:5432/paymentdb
       PORT: 9902
@@ -25,7 +27,9 @@ services:
       - db
 
   web:
-    build: ./apps/web
+    build: 
+      context: .
+      dockerfile: apps/web/Dockerfile
     environment:
       REACT_APP_API_URL: http://localhost:9902
       PORT: 9901
