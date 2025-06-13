@@ -55,7 +55,6 @@ export function CreateAccountDialog({
         <Dialog.Content className="fixed left-[50%] top-[50%] max-h-[85vh] w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-lg bg-white p-0 shadow-lg overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out">
           <div className="flex flex-col max-h-[85vh]">
             
-            {/* Header */}
             <div className="px-6 pt-6">
               <Dialog.Title className="text-2xl font-bold">New Account</Dialog.Title>
               <Dialog.Description className="mt-2 text-sm text-gray-600">
@@ -63,7 +62,6 @@ export function CreateAccountDialog({
               </Dialog.Description>
             </div>
 
-            {/* Scrollable content */}
             <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
               <form id="create-account-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                 <Input
@@ -159,7 +157,6 @@ export function CreateAccountDialog({
               </form>
             </div>
 
-            {/* Footer */}
             <div className="mt-auto flex justify-end gap-3 border-t px-6 py-4">
               <Button
                 type="button"
@@ -178,7 +175,6 @@ export function CreateAccountDialog({
               </Button>
             </div>
 
-            {/* Close button */}
             <Dialog.Close className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none">
               <Cross2Icon className="h-5 w-5" />
             </Dialog.Close>

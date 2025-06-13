@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as Dialog from '@radix-ui/react-dialog';
-import { Cross2Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
-import { type UpdateAccountInput } from '@cashbook/validation';
-import { updateAccountSchema } from '@cashbook/validation';
-import { Account } from '@cashbook/utils';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/Button';
+import React from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Cross2Icon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import { type UpdateAccountInput } from "@cashbook/validation";
+import { updateAccountSchema } from "@cashbook/validation";
+import { Account } from "@cashbook/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
 
 interface EditAccountDialogProps {
   open: boolean;
@@ -18,11 +18,11 @@ interface EditAccountDialogProps {
   onSubmit: (data: UpdateAccountInput) => void;
 }
 
-export function EditAccountDialog({ 
-  open, 
-  onOpenChange, 
-  account, 
-  onSubmit 
+export function EditAccountDialog({
+  open,
+  onOpenChange,
+  account,
+  onSubmit,
 }: EditAccountDialogProps) {
   const {
     register,
@@ -37,7 +37,7 @@ export function EditAccountDialog({
       name: account.name,
       accountNumber: account.accountNumber,
       details: account.details,
-      upiLinks: account.upiLinks || [''],
+      upiLinks: account.upiLinks || [""],
     },
   });
 
@@ -47,13 +47,13 @@ export function EditAccountDialog({
       reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error updating account:', error);
+      console.error("Error updating account:", error);
     }
   };
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'upiLinks',
+    name: "upiLinks",
   });
 
   return (
@@ -64,73 +64,85 @@ export function EditAccountDialog({
           <div className="flex flex-col max-h-[85vh]">
             {/* Header */}
             <div className="px-6 pt-6">
-              <Dialog.Title className="text-2xl font-bold">Edit Account</Dialog.Title>
+              <Dialog.Title className="text-2xl font-bold">
+                Edit Account
+              </Dialog.Title>
               <Dialog.Description className="mt-2 text-sm text-gray-600">
                 Update your account information below
               </Dialog.Description>
             </div>
 
-          <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
-              <form id="edit-account-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-            <Input
-              label="Account Name"
-              type="text"
-              {...register('name')}
-              error={errors.name?.message}
-            />
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Account Type</label>
-              <select
-                {...register('type')}
-                className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.type ? 'ring-red-500' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-transparent sm:text-sm sm:leading-6`}
+            <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1">
+              <form
+                id="edit-account-form"
+                onSubmit={handleSubmit(handleFormSubmit)}
+                className="space-y-4"
               >
-                <option value="">Select account type</option>
-                <option value="CASH">Cash</option>
-                <option value="BANK_SB">Bank Savings</option>
-                <option value="BANK_CREDIT">Bank Credit</option>
-                <option value="CREDIT_CARD">Credit Card</option>
-                <option value="DEMAT">Demat</option>
-                <option value="LOAN">Loan</option>
-                <option value="TRADING">Trading</option>
-                <option value="UPI">UPI</option>
-                <option value="OTHER">Other</option>
-              </select>
-              {errors.type && (
-                <p className="text-sm text-red-500">{errors.type.message}</p>
-              )}
-            </div>
+                <Input
+                  label="Account Name"
+                  type="text"
+                  {...register("name")}
+                  error={errors.name?.message}
+                />
 
-            <Input
-              label="Account Number"
-              type="text"
-              {...register('accountNumber')}
-              error={errors.accountNumber?.message}
-            />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Account Type
+                  </label>
+                  <select
+                    {...register("type")}
+                    className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
+                      errors.type ? "ring-red-500" : "ring-gray-300"
+                    } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-transparent sm:text-sm sm:leading-6`}
+                  >
+                    <option value="">Select account type</option>
+                    <option value="CASH">Cash</option>
+                    <option value="BANK_SB">Bank Savings</option>
+                    <option value="BANK_CREDIT">Bank Credit</option>
+                    <option value="CREDIT_CARD">Credit Card</option>
+                    <option value="DEMAT">Demat</option>
+                    <option value="LOAN">Loan</option>
+                    <option value="TRADING">Trading</option>
+                    <option value="UPI">UPI</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  {errors.type && (
+                    <p className="text-sm text-red-500">
+                      {errors.type.message}
+                    </p>
+                  )}
+                </div>
 
-            <Input
-              label="Details"
-              type="text"
-              {...register('details')}
-              error={errors.details?.message}
-            />
+                <Input
+                  label="Account Number"
+                  type="text"
+                  {...register("accountNumber")}
+                  error={errors.accountNumber?.message}
+                />
 
-            <div className="space-y-4">
+                <Input
+                  label="Details"
+                  type="text"
+                  {...register("details")}
+                  error={errors.details?.message}
+                />
+
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">UPI Links</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      UPI Links
+                    </label>
                     <Button
                       type="button"
                       variant="secondary"
-                      onClick={() => append('')}
+                      onClick={() => append("")}
                       className="flex items-center gap-1"
                     >
                       <PlusIcon className="h-4 w-4" />
                       Add UPI Link
                     </Button>
                   </div>
-                  
+
                   {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2">
                       <div className="flex-1">
@@ -138,12 +150,16 @@ export function EditAccountDialog({
                           type="text"
                           placeholder="Enter UPI link"
                           className={`block w-full rounded-md border-0 p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ${
-                            errors.upiLinks?.[index] ? 'ring-red-500' : 'ring-gray-300'
+                            errors.upiLinks?.[index]
+                              ? "ring-red-500"
+                              : "ring-gray-300"
                           } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-transparent sm:text-sm sm:leading-6`}
                           {...register(`upiLinks.${index}` as const)}
                         />
                         {errors.upiLinks?.[index] && (
-                          <p className="mt-1 text-sm text-red-500">{errors.upiLinks[index]?.message}</p>
+                          <p className="mt-1 text-sm text-red-500">
+                            {errors.upiLinks[index]?.message}
+                          </p>
                         )}
                       </div>
                       {fields.length > 1 && (
@@ -158,7 +174,7 @@ export function EditAccountDialog({
                       )}
                     </div>
                   ))}
-                  {typeof errors.upiLinks === 'string' && (
+                  {typeof errors.upiLinks === "string" && (
                     <p className="text-sm text-red-500">{errors.upiLinks}</p>
                   )}
                 </div>
@@ -180,7 +196,7 @@ export function EditAccountDialog({
                 form="edit-account-form"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
