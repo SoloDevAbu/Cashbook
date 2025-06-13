@@ -17,7 +17,8 @@ COPY . .
 RUN yarn workspace backend build
 
 # Expose port
-EXPOSE 8080
+ENV PORT=9902
+EXPOSE 9902
 
 # Start the application
 CMD ["yarn", "workspace", "backend", "start"]

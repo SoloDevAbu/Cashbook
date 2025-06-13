@@ -14,7 +14,7 @@ import { apiLogger } from './middlewares/api-logger.middleware';
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 9902; // Default port for backend
 const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(express.json());
@@ -23,14 +23,14 @@ app.use(cookieParser());
 // Add API logger middleware to track all requests
 app.use(apiLogger);
 
-const allowedOrigins = isProduction 
+const allowedOrigins = isProduction
   ? [process.env.PRODUCTION_WEB_URL, process.env.PRODUCTION_MOBILE_URL].filter(Boolean)
   : ['http://localhost:3000', 'http://localhost:19006'];
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
@@ -60,7 +60,7 @@ interface CustomError extends Error {
 app.use((err: CustomError, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   const statusCode = err.status || 500;
-  res.status(statusCode).json({ 
+  res.status(statusCode).json({
     message: err.message || 'Something broke!',
     code: err.code
   });

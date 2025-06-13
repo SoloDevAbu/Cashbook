@@ -19,7 +19,7 @@ COPY . .
 RUN yarn workspace web build
 
 # Expose port
-EXPOSE 3000
+EXPOSE 9901
 
 # Start the application
 CMD ["yarn", "workspace", "web", "start"]
