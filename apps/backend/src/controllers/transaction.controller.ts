@@ -24,7 +24,7 @@ export const createTransaction = async (req: Request, res: Response) => {
       });
     }
 
-    const { accountId, headerId, tagId, entityId, budgetId, ...data } = result.data;
+    const { accountId, headerId, tagId, entityId, budgetId, status, ...data } = result.data;
 
     const account = await prisma.transactionAccount.findFirst({
       where: {
@@ -47,7 +47,7 @@ export const createTransaction = async (req: Request, res: Response) => {
     const transaction = await prisma.transaction.create({
       data: {
         ...data,
-        status: TransactionStatus.PENDING,
+        status: status || TransactionStatus.PENDING,
         transactionDate: new Date(data.transactionDate),
         receiptUrls: [],
         account: { connect: { id: accountId } },

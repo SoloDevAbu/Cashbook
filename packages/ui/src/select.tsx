@@ -86,13 +86,16 @@ export const SelectInput = React.forwardRef<HTMLButtonElement, SelectInputProps>
             {label}
           </label>
         )}
-        <Select value={value} onValueChange={onChange}>
+        <Select value={value || undefined} onValueChange={onChange}>
           <SelectTrigger ref={ref} disabled={disabled}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem 
+                key={option.value} 
+                value={option.value || '_empty_'}
+              >
                 {option.label}
               </SelectItem>
             ))}

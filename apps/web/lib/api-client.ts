@@ -2,7 +2,7 @@ import axios from "axios";
 import dotenv from 'dotenv';
 dotenv.config();
 
-const BACKEND_URL = 'http://localhost:9902';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:9902';
 
 export const api = axios.create({
     baseURL: BACKEND_URL,

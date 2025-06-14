@@ -1,5 +1,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { v4 as uuidv4 } from "uuid";
+import dotenv from 'dotenv';
+dotenv.config()
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING!;
 const CONTAINER_NAME = process.env.AZURE_BLOB_CONTAINER_NAME!;

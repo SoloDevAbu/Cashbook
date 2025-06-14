@@ -4,13 +4,16 @@ import { TransactionType, TransactionStatus } from "@cashbook/db";
 export const createTransactionSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   type: z.enum([TransactionType.CREDIT, TransactionType.DEBIT]),
-  details: z.string().optional(),
-  transactionDate: z.string().or(z.date()),
+  details: z.string(),
+  transferId: z.string(),
+  status: z.enum([TransactionStatus.PENDING, TransactionStatus.COMPLETE]),
+  receiptUrls: z.array(z.string().url()).optional(),
+  transactionDate: z.string(),
   accountId: z.string().uuid("Invalid account ID"),
-  headerId: z.string().uuid("Invalid header ID").optional(),
-  tagId: z.string().uuid("Invalid tag ID").optional(),
-  entityId: z.string().uuid("Invalid entity ID").optional(),
-  budgetId: z.string().uuid("Invalid budget ID").optional()
+  headerId: z.string().uuid("Invalid header ID"),
+  tagId: z.string().uuid("Invalid tag ID"),
+  entityId: z.string().uuid("Invalid entity ID"),
+  budgetId: z.string().uuid("Invalid budget ID").optional().nullable(),
 });
 
 export const updateTransactionSchema = createTransactionSchema.partial();
