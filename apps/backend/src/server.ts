@@ -25,7 +25,7 @@ app.use(apiLogger);
 
 const allowedOrigins = isProduction
   ? [process.env.PRODUCTION_WEB_URL, process.env.PRODUCTION_MOBILE_URL].filter(Boolean)
-  : ['http://localhost:3000', 'http://localhost:19006'];
+  : ['http://localhost:9901', 'http://localhost:19006'];
 
 app.use(cors({
   origin: (origin, callback) => {

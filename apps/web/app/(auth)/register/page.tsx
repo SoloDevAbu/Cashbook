@@ -14,7 +14,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 dotenv.config();
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const BACKEND_URL = 'http://localhost:9902';
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);

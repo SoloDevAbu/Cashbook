@@ -6,6 +6,7 @@ import {
   updateTransactionStatusSchema,
   uploadReceiptSchema
 } from "@cashbook/validation";
+import { uploadFileToAzure } from "../utils/azure-blob-storage";
 
 export const createTransaction = async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -25,7 +26,6 @@ export const createTransaction = async (req: Request, res: Response) => {
 
     const { accountId, headerId, tagId, entityId, budgetId, ...data } = result.data;
 
-    // Verify that the account belongs to the user
     const account = await prisma.transactionAccount.findFirst({
       where: {
         id: accountId,
@@ -37,7 +37,6 @@ export const createTransaction = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    // Build relation fields, explicitly setting undefined if not present
     const relationFields: Record<string, any> = {
       header: headerId ? { connect: { id: headerId } } : undefined,
       tag: tagId ? { connect: { id: tagId } } : undefined,
@@ -45,7 +44,6 @@ export const createTransaction = async (req: Request, res: Response) => {
       budget: budgetId ? { connect: { id: budgetId } } : undefined
     };
 
-    // Create the transaction
     const transaction = await prisma.transaction.create({
       data: {
         ...data,
@@ -230,7 +228,6 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
       });
     }
 
-    // First check if the transaction belongs to the user
     const existingTransaction = await prisma.transaction.findFirst({
       where: {
         id,
@@ -242,9 +239,14 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
       return res.status(404).json({ message: "Transaction not found" });
     }
 
-    // Handle file uploads here
-    // This is a placeholder for actual file upload logic
-    const uploadedUrls = ["placeholder-url"]; // Replace with actual upload logic
+    const files = result.data.receipts as Express.Multer.File[];
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of files) {
+      const blobUrl = await uploadFileToAzure(file.buffer, file.originalname, file.mimetype);
+      uploadedUrls.push(blobUrl);
+    }
 
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
@@ -255,7 +257,11 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
       }
     });
 
-    res.json(updatedTransaction);
+    res.json({
+      message: "Receipts uploaded successfully",
+      urls: uploadedUrls,
+      transaction: updatedTransaction
+    });
   } catch (error) {
     console.error("Error uploading receipts:", error);
     res.status(500).json({ message: "Internal server error" });

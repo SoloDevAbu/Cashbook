@@ -12,7 +12,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const BACKEND_URL = 'http://localhost:9902';
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();

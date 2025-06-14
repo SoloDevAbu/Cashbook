@@ -22,7 +22,13 @@ export const updateTransactionStatusSchema = z.object({
 });
 
 export const uploadReceiptSchema = z.object({
-  receipts: z.array(z.any()).min(1, "At least one receipt is required")
+  receipts: z.array(
+    z.object({
+      originalname: z.string(),
+      buffer: z.instanceof(Buffer),
+      mimetype: z.string()
+    })
+  ).min(1, "At least one receipt is required")
 });
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;

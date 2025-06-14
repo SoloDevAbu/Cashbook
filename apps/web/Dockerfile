@@ -8,6 +8,8 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/validation/package.json ./packages/validation/
 
 # Install dependencies
 RUN yarn install --frozen-lockfile

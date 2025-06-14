@@ -12,16 +12,14 @@ import { NextFunction, Request, Response } from 'express';
 
 const router = Router();
 
-// Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 10 // Maximum 10 files
+    fileSize: 5 * 1024 * 1024,
+    files: 10
   }
 });
 
-// Error handling wrapper
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
   (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
