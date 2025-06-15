@@ -21,8 +21,8 @@ export function useTransactions() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Entity created successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create entity");
+    onError: () => {
+      toast.error("Failed to create entity");
     },
   });
 
@@ -32,8 +32,8 @@ export function useTransactions() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Entity updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update entity");
+    onError: () => {
+      toast.error("Failed to update entity");
     },
   });
 
@@ -43,19 +43,20 @@ export function useTransactions() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Entity updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update entity");
+    onError: () => {
+      toast.error("Failed to update entity");
     },
   });
 
   const uploadReceipt = useMutation({
-    mutationFn: ({ id, receiptUrls }: { id: string; receiptUrls: string[] }) => transactionsApi.uploadReciept(id, receiptUrls),
+    mutationFn: ({ id, receipts }: { id: string; receipts: File[] }) => 
+      transactionsApi.uploadReciept(id, receipts),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      toast.success("Entity updated successfully");
+      toast.success("Receipts uploaded successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update entity");
+    onError: () => {
+      toast.error("Failed to upload receipts");
     },
   });
 

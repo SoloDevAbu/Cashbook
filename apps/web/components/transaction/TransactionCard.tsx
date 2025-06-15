@@ -1,12 +1,16 @@
 'use client'
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { Transaction } from '@cashbook/utils';
 import { format } from 'date-fns';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useHeaders } from '@/hooks/useHeaders';
 import { useTags } from '@/hooks/useTags';
 import { useSourceDestinations } from '@/hooks/useSourceDestinatio';
+import { useTransactions } from '@/hooks/useTransactions';
+import { Button } from '@/components/ui/Button';
+import { UploadReceiptsDialog } from './UploadReceiptsDialog';
+import { toast } from 'sonner';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -23,6 +27,8 @@ export function TransactionCard({
   const { headers } = useHeaders();
   const { tags } = useTags();
   const { sourceDestinations } = useSourceDestinations();
+  const { uploadReceipt } = useTransactions();
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   const account = accounts?.find(a => a.id === transaction.accountId);
   const header = headers?.find(h => h.id === transaction.headerId);
@@ -32,6 +38,19 @@ export function TransactionCard({
   const statusColors = {
     PENDING: 'bg-yellow-100 text-yellow-800',
     COMPLETE: 'bg-green-100 text-green-800',
+  };
+
+  const handleUpload = async (files: File[]) => {
+    try {
+      await uploadReceipt.mutateAsync({
+        id: transaction.id,
+        receipts: files
+      });
+      toast.success('Receipts uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading receipts:', error);
+      toast.error('Failed to upload receipts');
+    }
   };
 
   return (
@@ -96,6 +115,15 @@ export function TransactionCard({
         )}
       </div>
 
+      <div className="flex items-center gap-4 justify-center">
+        <Button
+          variant="default"
+          onClick={() => setIsUploadDialogOpen(true)}
+        >
+          Upload Receipts
+        </Button>
+      </div>
+
       {transaction.receiptUrls && transaction.receiptUrls.length > 0 && (
         <div className="text-sm">
           <span className="font-medium">Receipts: </span>
@@ -118,6 +146,12 @@ export function TransactionCard({
       <div className="text-sm text-gray-500">
         Added on {format(new Date(transaction.createdAt), 'PPP')}
       </div>
+
+      <UploadReceiptsDialog
+        isOpen={isUploadDialogOpen}
+        onClose={() => setIsUploadDialogOpen(false)}
+        onUpload={handleUpload}
+      />
     </div>
   );
 } 

@@ -36,10 +36,17 @@ export const transactionsApi = {
 
   uploadReciept: async (
     id: string,
-    receiptUrls: string[]
+    files: File[]
   ): Promise<Transaction> => {
-    const response = await api.patch(`/api/transactions/${id}/upload`, {
-      receiptUrls,
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('receipts', file);
+    });
+
+    const response = await api.post(`/api/transactions/${id}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response.data;
   },

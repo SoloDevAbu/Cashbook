@@ -240,13 +240,20 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
     }
 
     const files = result.data.receipts as Express.Multer.File[];
-
     const uploadedUrls: string[] = [];
 
-    for (const file of files) {
-      const blobUrl = await uploadFileToAzure(file.buffer, file.originalname, file.mimetype);
-      uploadedUrls.push(blobUrl);
-    }
+    // Process files in parallel
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const blobUrl = await uploadFileToAzure(file.buffer, file.originalname, file.mimetype);
+          uploadedUrls.push(blobUrl);
+        } catch (error) {
+          console.error(`Error uploading file ${file.originalname}:`, error);
+          throw new Error(`Failed to upload ${file.originalname}`);
+        }
+      })
+    );
 
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
@@ -254,6 +261,13 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
         receiptUrls: {
           push: uploadedUrls
         }
+      },
+      include: {
+        account: true,
+        header: true,
+        tag: true,
+        entity: true,
+        budget: true
       }
     });
 
@@ -264,6 +278,9 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
     });
   } catch (error) {
     console.error("Error uploading receipts:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Failed to upload receipts",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
   }
 };

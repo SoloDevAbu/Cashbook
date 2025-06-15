@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateTagInput, Tag } from "@cashbook/utils";
 import { api } from '@/lib/api-client';
+import { toast } from "sonner";
 
 export function useTags() {
   const queryClient = useQueryClient();
@@ -20,6 +21,10 @@ export function useTags() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success("Tag created successfully");
+    },
+    onError: () => {
+      toast.error("Failed to create Tag");
     },
   });
 
@@ -30,6 +35,10 @@ export function useTags() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success("Tag updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update Tag");
     },
   });
 

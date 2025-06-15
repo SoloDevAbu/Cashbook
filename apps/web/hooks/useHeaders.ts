@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Header, CreateHeaderInput, UpdateHeaderStatusInput } from "@cashbook/utils";
 import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 export function useHeaders() {
   const queryClient = useQueryClient();
@@ -20,7 +21,11 @@ export function useHeaders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["headers"] });
+      toast.success("Header created successfully")
     },
+    onError: () => {
+      toast.error("Failed to create header")
+    }
   });
 
   // const updateHeader = useMutation({
@@ -40,7 +45,11 @@ export function useHeaders() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["headers"] });
+      toast.success("Header updated successfully")
     },
+    onError: () => {
+      toast.error("Failed to update header")
+    }
   });
 
   return {

@@ -23,8 +23,8 @@ export function useSourceDestinations() {
       queryClient.invalidateQueries({ queryKey: ["sourceDestinations"] });
       toast.success("Entity created successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create entity");
+    onError: () => {
+      toast.error("Failed to create entity");
     },
   });
 
@@ -34,8 +34,8 @@ export function useSourceDestinations() {
       queryClient.invalidateQueries({ queryKey: ["sourceDestinations"] });
       toast.success("Entity updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update entity");
+    onError: () => {
+      toast.error("Failed to update entity");
     },
   });
 
