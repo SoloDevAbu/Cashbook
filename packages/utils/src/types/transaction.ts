@@ -8,8 +8,8 @@ export interface Transaction {
     details: string;
     transferId: string;
     status: TransactionStatus;
-    receiptUrls?: string[];
     transactionDate: string;
+    receipts: TransactionReceipt[];
     accountId: string;
     headerId: string;
     tagId: string;
@@ -19,5 +19,20 @@ export interface Transaction {
     updatedAt: string;
 }
 
-export type CreateTransactionInput = Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>;
+export interface TransactionReceipt {
+    id: string;
+    blobName: string;
+    container: string;
+    mimeType: string;
+    size: number;
+    originalName: string;
+    receiptUploadedAt: string;
+    signedUrl: string;
+    transactionId?: string;
+    budgetId?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export type CreateTransactionInput = Omit<Transaction, 'id' | 'blobName' | 'container' | 'mimeType' | 'size' | 'receiptUploadedAt' | 'createdAt' | 'updatedAt'>;
 export type UpdateTransactionInput = Partial<CreateTransactionInput>;

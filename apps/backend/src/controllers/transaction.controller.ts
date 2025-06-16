@@ -6,7 +6,7 @@ import {
   updateTransactionStatusSchema,
   uploadReceiptSchema
 } from "@cashbook/validation";
-import { uploadFileToAzure } from "../utils/azure-blob-storage";
+import { getSignedUrl, uploadFileToAzure } from "../utils/azure-blob-storage";
 
 export const createTransaction = async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -49,7 +49,6 @@ export const createTransaction = async (req: Request, res: Response) => {
         ...data,
         status: status || TransactionStatus.PENDING,
         transactionDate: new Date(data.transactionDate),
-        receiptUrls: [],
         account: { connect: { id: accountId } },
         owner: { connect: { id: userId } },
         header: relationFields.header,
@@ -89,14 +88,41 @@ export const getTransactions = async (req: Request, res: Response) => {
         header: true,
         tag: true,
         entity: true,
-        budget: true
+        budget: true,
+        receipts: true
       },
       orderBy: {
-        transactionDate: 'desc'
+        createdAt: 'desc'
       }
     });
 
-    res.json(transactions);
+    const transactionsWithSignedUrls = await Promise.all(
+      transactions.map(async (transaction) => {
+        if (transaction.receipts && transaction.receipts.length > 0) {
+          const receiptsWithUrls = await Promise.all(
+            transaction.receipts.map(async (receipt) => {
+              try {
+                const signedUrl = await getSignedUrl(receipt.container, receipt.blobName);
+                return {
+                  ...receipt,
+                  signedUrl
+                };
+              } catch (error) {
+                console.error(`Error generating signed URL for receipt ${receipt.id}:`, error);
+                return receipt;
+              }
+            })
+          );
+          return {
+            ...transaction,
+            receipts: receiptsWithUrls
+          };
+        }
+        return transaction;
+      })
+    );
+
+    res.json(transactionsWithSignedUrls);
   } catch (error) {
     console.error("Error fetching transactions:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -121,7 +147,6 @@ export const updateTransaction = async (req: Request, res: Response) => {
       });
     }
 
-    // First check if the transaction belongs to the user
     const existingTransaction = await prisma.transaction.findFirst({
       where: {
         id,
@@ -182,7 +207,6 @@ export const updateTransactionStatus = async (req: Request, res: Response) => {
       });
     }
 
-    // First check if the transaction belongs to the user
     const existingTransaction = await prisma.transaction.findFirst({
       where: {
         id,
@@ -232,6 +256,9 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
       where: {
         id,
         ownerId: userId
+      },
+      include: {
+        receipts: true
       }
     });
 
@@ -240,14 +267,30 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
     }
 
     const files = result.data.receipts as Express.Multer.File[];
-    const uploadedUrls: string[] = [];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No files provided" });
+    }
 
-    // Process files in parallel
-    await Promise.all(
+    const uploadedReceipts = await Promise.all(
       files.map(async (file) => {
-        try {
-          const blobUrl = await uploadFileToAzure(file.buffer, file.originalname, file.mimetype);
-          uploadedUrls.push(blobUrl);
+        try {          
+          const blobName = await uploadFileToAzure(file.buffer, file.originalname, file.mimetype);
+          const container = process.env.AZURE_STORAGE_ACCOUNT!;
+          
+          const receiptData = {
+            blobName,
+            container,
+            mimeType: file.mimetype,
+            size: file.size,
+            originalName: file.originalname,
+            transaction: {
+              connect: { id }
+            },
+          };
+          
+          return prisma.transactionReceipt.create({
+            data: receiptData
+          });
         } catch (error) {
           console.error(`Error uploading file ${file.originalname}:`, error);
           throw new Error(`Failed to upload ${file.originalname}`);
@@ -255,25 +298,38 @@ export const uploadTransactionReceipts = async (req: Request, res: Response) => 
       })
     );
 
-    const updatedTransaction = await prisma.transaction.update({
+    const updatedTransaction = await prisma.transaction.findUnique({
       where: { id },
-      data: {
-        receiptUrls: {
-          push: uploadedUrls
-        }
-      },
       include: {
         account: true,
         header: true,
         tag: true,
         entity: true,
-        budget: true
+        budget: true,
+        receipts: true
       }
     });
 
+    if (updatedTransaction?.receipts) {
+      const receiptsWithUrls = await Promise.all(
+        updatedTransaction.receipts.map(async (receipt) => {
+          try {
+            const signedUrl = await getSignedUrl(receipt.container, receipt.blobName);
+            return {
+              ...receipt,
+              signedUrl
+            };
+          } catch (error) {
+            console.error(`Error generating signed URL for receipt ${receipt.id}:`, error);
+            return receipt;
+          }
+        })
+      );
+      updatedTransaction.receipts = receiptsWithUrls;
+    }
+
     res.json({
       message: "Receipts uploaded successfully",
-      urls: uploadedUrls,
       transaction: updatedTransaction
     });
   } catch (error) {

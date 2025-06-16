@@ -137,7 +137,6 @@ model Transaction {
   details          String?
   transferId       String?
   status           TransactionStatus
-  receiptUrls      String[] // URLs to uploaded receipts
   transactionDate  DateTime
   entryDate        DateTime @default(now())
 
@@ -159,6 +158,8 @@ model Transaction {
   owner            User                @relation(fields: [ownerId], references: [id])
   ownerId          String
 
+  receipts         TransactionReceipt[]
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -171,6 +172,25 @@ enum TransactionType {
 enum TransactionStatus {
   COMPLETE
   PENDING
+}
+
+model TransactionReceipt {
+  id                String   @id @default(uuid())
+  blobName          String
+  container         String
+  mimeType          String
+  size              Int
+  originalName      String
+  receiptUploadedAt DateTime @default(now())
+
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId String?
+
+  budget        Budget?      @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budgetId      String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Budget {
@@ -201,6 +221,8 @@ model Budget {
   updatedAt        DateTime @updatedAt
 
   transactions     Transaction[]
+
+  receipts         TransactionReceipt[]
 }
 
 enum BudgetType {

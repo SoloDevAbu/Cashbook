@@ -7,7 +7,6 @@ export const createTransactionSchema = z.object({
   details: z.string(),
   transferId: z.string(),
   status: z.enum([TransactionStatus.PENDING, TransactionStatus.COMPLETE]),
-  receiptUrls: z.array(z.string().url()).optional(),
   transactionDate: z.string(),
   accountId: z.string().uuid("Invalid account ID"),
   headerId: z.string().uuid("Invalid header ID"),
@@ -29,7 +28,8 @@ export const uploadReceiptSchema = z.object({
     z.object({
       originalname: z.string(),
       buffer: z.instanceof(Buffer),
-      mimetype: z.string()
+      mimetype: z.string(),
+      size: z.number()
     })
   ).min(1, "At least one receipt is required")
 });
