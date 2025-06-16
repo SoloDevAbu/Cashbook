@@ -9,7 +9,7 @@ export interface Transaction {
     transferId: string;
     status: TransactionStatus;
     transactionDate: string;
-    receipts: TransactionReceipt[];
+    receipts?: TransactionReceipt[];
     accountId: string;
     headerId: string;
     tagId: string;

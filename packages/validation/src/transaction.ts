@@ -7,12 +7,13 @@ export const createTransactionSchema = z.object({
   details: z.string(),
   transferId: z.string(),
   status: z.enum([TransactionStatus.PENDING, TransactionStatus.COMPLETE]),
+  receipts: z.any().optional(),
   transactionDate: z.string(),
   accountId: z.string().uuid("Invalid account ID"),
   headerId: z.string().uuid("Invalid header ID"),
   tagId: z.string().uuid("Invalid tag ID"),
   entityId: z.string().uuid("Invalid entity ID"),
-  budgetId: z.string().uuid("Invalid budget ID").optional().nullable(),
+  budgetId: z.string().uuid("Invalid budget ID").optional(),
 });
 
 export const updateTransactionSchema = createTransactionSchema.partial();

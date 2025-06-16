@@ -4,17 +4,14 @@ import { Input } from '@/components/ui/input';
 import { loginSchema } from '@cashbook/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { LoginInput } from '@cashbook/validation';
-import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
+import { useEffect } from 'react';
 
-const BACKEND_URL = 'http://localhost:9902';
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, isLoading, login } = useAuth();
   const router = useRouter();
   
   const {
@@ -25,24 +22,23 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginInput) => {
-    setIsLoading(true);
-    try {
-      const result = await axios.post(`${BACKEND_URL}/api/auth/login`,
-         data
-        , {
-          withCredentials: true
-        }
-      );
-      if (result.data.success) {
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (user && !isLoading) {
+      router.push('/dashboard');
     }
+  }, [user, isLoading, router]);
+
+  const onSubmit = async (data: LoginInput) => {
+    login.mutate({ data });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">

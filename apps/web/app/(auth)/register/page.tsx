@@ -4,20 +4,16 @@ import { Input } from '@/components/ui/input';
 import { registerSchema } from '@cashbook/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { RegistrationInput } from '@cashbook/validation';
 import { SelectInput } from '@cashbook/ui';
 import { currencies } from '@cashbook/utils';
-import dotenv from 'dotenv';
-import axios from 'axios';
-dotenv.config();
-
-const BACKEND_URL = 'http://localhost:9902';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 
 export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, isLoading, register: registerUser } = useAuth();
   const router = useRouter();
   
   const {
@@ -29,26 +25,23 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegistrationInput) => {
-    setIsLoading(true);
-    try {
-      const result = await axios.post(
-        `${BACKEND_URL}/api/auth/register`,
-        data,
-        {
-          withCredentials: true
-        }
-      );
-
-      if(result.data) {
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
     }
+  }, [user, router]);
+
+  const onSubmit = async (data: RegistrationInput) => {
+    registerUser.mutate({ data });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50">
@@ -67,13 +60,14 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 id="firstName"
                 label="First name"
+                type="text"
                 autoComplete="given-name"
                 disabled={isLoading}
                 {...register('firstName')}
@@ -83,131 +77,142 @@ export default function RegisterPage() {
               <Input
                 id="lastName"
                 label="Last name"
+                type="text"
                 autoComplete="family-name"
                 disabled={isLoading}
                 {...register('lastName')}
                 error={errors.lastName?.message}
               />
+            </div>
 
-              <Input
-                id="email"
-                label="Email address"
-                type="email"
-                autoComplete="email"
-                disabled={isLoading}
-                {...register('email')}
-                error={errors.email?.message}
-              />
+            <Input
+              id="email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              disabled={isLoading}
+              {...register('email')}
+              error={errors.email?.message}
+            />
 
-              <Input
-                id="password"
-                label="Password"
-                type="password"
-                autoComplete="new-password"
-                disabled={isLoading}
-                {...register('password')}
-                error={errors.password?.message}
-              />
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              autoComplete="new-password"
+              disabled={isLoading}
+              {...register('password')}
+              error={errors.password?.message}
+            />
 
-              <Input
-                id="phone"
-                label="Phone number"
-                type="tel"
-                autoComplete="tel"
-                disabled={isLoading}
-                {...register('phone')}
-                error={errors.phone?.message}
-              />
+            <Input
+              id="phone"
+              label="Phone number"
+              type="tel"
+              autoComplete="tel"
+              disabled={isLoading}
+              {...register('phone')}
+              error={errors.phone?.message}
+            />
 
-              <Input
-                id="altPhone"
-                label="Alternative phone (optional)"
-                type="tel"
-                disabled={isLoading}
-                {...register('altPhone')}
-                error={errors.altPhone?.message}
-              />
+            <Input
+              id="altPhone"
+              label="Alternative phone number"
+              type="tel"
+              autoComplete="tel"
+              disabled={isLoading}
+              {...register('altPhone')}
+              error={errors.altPhone?.message}
+            />
 
-              <Input
-                id="companyName"
-                label="Company name"
-                disabled={isLoading}
-                {...register('companyName')}
-                error={errors.companyName?.message}
-              />
+            <Input
+              id="companyName"
+              label="Company name"
+              type="text"
+              disabled={isLoading}
+              {...register('companyName')}
+              error={errors.companyName?.message}
+            />
 
-              <Input
-                id="address"
-                label="Address"
-                disabled={isLoading}
-                {...register('address')}
-                error={errors.address?.message}
-              />
+            <Input
+              id="address"
+              label="Address"
+              type="text"
+              autoComplete="street-address"
+              disabled={isLoading}
+              {...register('address')}
+              error={errors.address?.message}
+            />
 
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 id="state"
                 label="State"
+                type="text"
                 disabled={isLoading}
                 {...register('state')}
                 error={errors.state?.message}
               />
 
               <Input
-                id="country"
-                label="Country"
-                disabled={isLoading}
-                {...register('country')}
-                error={errors.country?.message}
-              />
-
-              <Input
                 id="pin"
-                label="PIN code"
+                label="PIN"
+                type="text"
                 disabled={isLoading}
                 {...register('pin')}
                 error={errors.pin?.message}
               />
-
-              <Input
-                id="pan"
-                label="PAN"
-                disabled={isLoading}
-                {...register('pan')}
-                error={errors.pan?.message}
-              />
-
-              <Input
-                id="gst"
-                label="GST number (optional)"
-                disabled={isLoading}
-                {...register('gst')}
-                error={errors.gst?.message}
-              />
-
-              <Input
-                id="nationalId"
-                label="National ID"
-                disabled={isLoading}
-                {...register('nationalId')}
-                error={errors.nationalId?.message}
-              />
-
-              <Controller
-                name="defaultCurrency"
-                control={control}
-                render={({ field }) => (
-                  <SelectInput
-                    label="Default currency"
-                    disabled={isLoading}
-                    options={currencies.slice()}
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={errors.defaultCurrency?.message}
-                    placeholder="Select currency"
-                  />
-                )}
-              />
             </div>
+
+            <Input
+              id="country"
+              label="Country"
+              type="text"
+              disabled={isLoading}
+              {...register('country')}
+              error={errors.country?.message}
+            />
+
+            <Controller
+              name="defaultCurrency"
+              control={control}
+              render={({ field }) => (
+                <SelectInput
+                  label="Default Currency"
+                  options={[...currencies]}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.defaultCurrency?.message}
+                />
+              )}
+            />
+
+            <Input
+              id="pan"
+              label="PAN"
+              type="text"
+              disabled={isLoading}
+              {...register('pan')}
+              error={errors.pan?.message}
+            />
+
+            <Input
+              id="gst"
+              label="GST"
+              type="text"
+              disabled={isLoading}
+              {...register('gst')}
+              error={errors.gst?.message}
+            />
+
+            <Input
+              id="nationalId"
+              label="National ID"
+              type="text"
+              disabled={isLoading}
+              {...register('nationalId')}
+              error={errors.nationalId?.message}
+            />
 
             <div>
               <button

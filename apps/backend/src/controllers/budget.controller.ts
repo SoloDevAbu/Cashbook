@@ -24,7 +24,6 @@ export const createBudget = async (req: Request, res: Response) => {
 
     const { accountId, headerId, tagId, entityId, ...data } = result.data;
 
-    // Verify that the account belongs to the user
     const account = await prisma.transactionAccount.findFirst({
       where: {
         id: accountId,
@@ -53,7 +52,6 @@ export const createBudget = async (req: Request, res: Response) => {
       budgetData.entity = { connect: { id: entityId } };
     }
 
-    // Create the budget
     const budget = await prisma.budget.create({
       data: budgetData,
       include: {
@@ -120,7 +118,6 @@ export const updateBudget = async (req: Request, res: Response) => {
       });
     }
 
-    // First check if the budget belongs to the user
     const existingBudget = await prisma.budget.findFirst({
       where: {
         id,
@@ -180,7 +177,6 @@ export const updateBudgetStatus = async (req: Request, res: Response) => {
       });
     }
 
-    // First check if the budget belongs to the user
     const existingBudget = await prisma.budget.findFirst({
       where: {
         id,
