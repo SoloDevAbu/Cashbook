@@ -11,6 +11,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { Button } from '@/components/ui/Button';
 import { UploadReceiptsDialog } from './UploadReceiptsDialog';
 import { toast } from 'sonner';
+import { formatFileSize } from '@/lib/utils';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -68,7 +69,7 @@ export function TransactionCard({
           >
             {transaction.status.charAt(0) + transaction.status.slice(1).toLowerCase()}
           </span>
-          <button onClick={onEdit} className="text-gray-400 hover:text-gray-500">
+          <button onClick={onEdit} className="text-gray-400 hover:text-gray-500 cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -124,20 +125,27 @@ export function TransactionCard({
         </Button>
       </div>
 
-      {transaction.receiptUrls && transaction.receiptUrls.length > 0 && (
-        <div className="text-sm">
-          <span className="font-medium">Receipts: </span>
-          <div className="mt-1 space-y-1">
-            {transaction.receiptUrls.map((url, index) => (
-              <a
-                key={index}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Receipt {index + 1}
-              </a>
+      {transaction.receipts && transaction.receipts.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Receipts</h4>
+          <div className="space-y-2">
+            {transaction.receipts.map((receipt) => (
+              <div key={receipt.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">{receipt.originalName}</span>
+                  <span className="text-xs text-gray-500">({formatFileSize(receipt.size)})</span>
+                </div>
+                {receipt.signedUrl && (
+                  <a
+                    href={receipt.signedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Download
+                  </a>
+                )}
+              </div>
             ))}
           </div>
         </div>

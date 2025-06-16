@@ -34,7 +34,6 @@ export function UploadReceiptsDialog({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Validate file types
     const validTypes = ["image/jpeg", "image/png", "application/pdf"];
     const newFiles = Array.from(files).filter((file) =>
       validTypes.includes(file.type)
