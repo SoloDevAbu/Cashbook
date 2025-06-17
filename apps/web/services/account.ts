@@ -18,7 +18,7 @@ export const accountsApi = {
     },
 
     updateStatus: async (id: string, status: Account['status']) : Promise<Account> => {
-        const response = await api.put(`/api/accounts/${id}/status`, { status });
+        const response = await api.patch(`/api/accounts/${id}/status`, { status });
         return response.data;
     },
 }

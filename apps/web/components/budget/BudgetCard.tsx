@@ -7,6 +7,12 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { useHeaders } from '@/hooks/useHeaders';
 import { useTags } from '@/hooks/useTags';
 import { useSourceDestinations } from '@/hooks/useSourceDestinatio';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/DropDownMenu';
 
 interface BudgetCardProps {
   budget: Budget;
@@ -17,6 +23,7 @@ interface BudgetCardProps {
 export function BudgetCard({
   budget,
   onEdit,
+  onStatusChange,
 }: BudgetCardProps) {
   const { accounts } = useAccounts();
   const { headers } = useHeaders();
@@ -28,36 +35,20 @@ export function BudgetCard({
   const tag = tags?.find(t => t.id === budget.tagId);
   const entity = sourceDestinations?.find(e => e.id === budget.entityId);
 
-  const statusColors = {
-    UNDER_PROCESS: 'bg-yellow-100 text-yellow-800',
-    COMPLETE_EXACT: 'bg-green-100 text-green-800',
-    COMPLETE_UNDERPAID: 'bg-blue-100 text-blue-800',
-    COMPLETE_OVERPAID: 'bg-purple-100 text-purple-800',
-    PARTIALLY_PAID: 'bg-orange-100 text-orange-800',
-    STALLED: 'bg-red-100 text-red-800',
-    CANCELLED: 'bg-gray-100 text-gray-800',
+  const statusConfig = {
+    UNDER_PROCESS: { label: 'Under Process', color: 'bg-yellow-100 text-yellow-800' },
+    COMPLETE_EXACT: { label: 'Complete', color: 'bg-green-100 text-green-800' },
+    COMPLETE_UNDERPAID: { label: 'Complete (Under paid)', color: 'bg-blue-100 text-blue-800' },
+    COMPLETE_OVERPAID: { label: 'Complete (Over paid)', color: 'bg-purple-100 text-purple-800' },
+    PARTIALLY_PAID: { label: 'Partially Paid', color: 'bg-orange-100 text-orange-800' },
+    STALLED: { label: 'Stalled', color: 'bg-red-100 text-red-800' },
+    CANCELLED: { label: 'Cancelled', color: 'bg-gray-100 text-gray-800' },
   };
 
-  const getStatusDisplay = (status: Budget['status']) => {
-    switch (status) {
-      case 'UNDER_PROCESS':
-        return 'Under Process';
-      case 'COMPLETE_EXACT':
-        return 'Complete';
-      case 'COMPLETE_UNDERPAID':
-        return 'Complete (Under paid)';
-      case 'COMPLETE_OVERPAID':
-        return 'Complete (Over paid)';
-      case 'PARTIALLY_PAID':
-        return 'Partially Paid';
-      case 'STALLED':
-        return 'Stalled';
-      case 'CANCELLED':
-        return 'Cancelled';
-      default:
-        return status;
-    }
-  };
+  const statusOptions = Object.entries(statusConfig).map(([value, { label }]) => ({
+    value: value as Budget['status'],
+    label,
+  }));
 
   return (
     <div className="border border-gray-400 rounded-2xl p-6 space-y-4">
@@ -69,11 +60,59 @@ export function BudgetCard({
           <p className="text-sm text-gray-600">{budget.details}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[budget.status]}`}
-          >
-            {getStatusDisplay(budget.status)}
-          </span>
+          <DropdownMenu>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[budget.status].color}`}
+              >
+                {statusConfig[budget.status].label}
+              </span>
+              <DropdownMenuTrigger asChild>
+                <button className="text-gray-400 hover:text-gray-500">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 14a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+            </div>
+            <DropdownMenuContent align="end" className=' shadow shadow-gray-500'>
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Change Status</div>
+              {statusOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => onStatusChange(option.value)}
+                  className={`flex items-center gap-2 px-2 py-2 text-sm ${
+                    option.value === budget.status 
+                      ? 'bg-gray-100 text-gray-900' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`px-2 py-1 rounded-full ${statusConfig[option.value].color}`}>
+                    {option.label}
+                  </span>
+                  {option.value === budget.status && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="w-4 h-4 ml-auto"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={onEdit} className="text-gray-400 hover:text-gray-500 cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"

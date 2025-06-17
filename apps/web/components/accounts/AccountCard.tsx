@@ -1,5 +1,11 @@
 // import { TransactionAccountType } from '@cashbook/db';
 import { Account, formatDate } from '@cashbook/utils';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/DropDownMenu';
 
 interface AccountCardProps {
   account: Account;
@@ -10,14 +16,21 @@ interface AccountCardProps {
 export function AccountCard({
   account,
   onEdit,
+  onStatusChange,
 }: AccountCardProps) {
-  const statusColors = {
+  const statusColors: Record<Account['status'], string> = {
     ACTIVE: 'bg-green-100 text-green-800',
     FROZEN: 'bg-blue-100 text-blue-800',
     CLOSED: 'bg-red-100 text-red-800',
   };
 
   const typeLabel = account.type.split('_').map((word) => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
+
+  const statusOptions = [
+    { value: 'ACTIVE' as const, label: 'Active' },
+    { value: 'FROZEN' as const, label: 'Frozen' },
+    { value: 'CLOSED' as const, label: 'Closed' },
+  ];
 
   return (
     <div className="border border-gray-400 rounded-2xl p-6 space-y-4">
@@ -27,11 +40,59 @@ export function AccountCard({
           <p className="text-sm text-gray-600">{typeLabel}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[account.status]}`}
-          >
-            {account.status.charAt(0) + account.status.slice(1).toLowerCase()}
-          </span>
+          <DropdownMenu>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[account.status]}`}
+              >
+                {account.status.charAt(0) + account.status.slice(1).toLowerCase()}
+              </span>
+              <DropdownMenuTrigger asChild>
+                <button className="text-gray-400 hover:text-gray-500">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 14a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+            </div>
+            <DropdownMenuContent align="end" className=" shadow shadow-gray-500">
+              <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Change Status</div>
+              {statusOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => onStatusChange(option.value)}
+                  className={`flex items-center gap-2 px-2 py-2 text-sm ${
+                    option.value === account.status 
+                      ? 'bg-gray-100 text-gray-900' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`px-2 py-1 rounded-full ${statusColors[option.value]}`}>
+                    {option.label}
+                  </span>
+                  {option.value === account.status && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="w-4 h-4 ml-auto"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button onClick={onEdit} className="text-gray-400 hover:text-gray-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"

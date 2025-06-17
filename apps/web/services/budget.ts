@@ -18,7 +18,7 @@ export const budgetApi = {
     id: string,
     status: Budget["status"]
   ): Promise<Budget> => {
-    const response = await api.patch(`api/budgets/${id}/status`, status);
+    const response = await api.patch(`/api/budgets/${id}/status`, { status });
     return response.data;
   },
 };
