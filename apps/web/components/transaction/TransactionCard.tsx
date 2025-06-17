@@ -22,7 +22,6 @@ interface TransactionCardProps {
 export function TransactionCard({
   transaction,
   onEdit,
-  onStatusChange,
 }: TransactionCardProps) {
   const { accounts } = useAccounts();
   const { headers } = useHeaders();

@@ -186,9 +186,6 @@ model TransactionReceipt {
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   transactionId String?
 
-  budget        Budget?      @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  budgetId      String?
-
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -199,6 +196,7 @@ model Budget {
   type             BudgetType
   details          String?
   status           BudgetStatus
+  transferId       String?
   transactionDate  DateTime
   entryDate        DateTime @default(now())
 
@@ -221,8 +219,6 @@ model Budget {
   updatedAt        DateTime @updatedAt
 
   transactions     Transaction[]
-
-  receipts         TransactionReceipt[]
 }
 
 enum BudgetType {

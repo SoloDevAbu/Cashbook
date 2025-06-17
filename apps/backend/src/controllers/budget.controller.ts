@@ -22,7 +22,7 @@ export const createBudget = async (req: Request, res: Response) => {
       });
     }
 
-    const { accountId, headerId, tagId, entityId, ...data } = result.data;
+    const { accountId, headerId, tagId, entityId, status, ...data } = result.data;
 
     const account = await prisma.transactionAccount.findFirst({
       where: {
@@ -37,7 +37,7 @@ export const createBudget = async (req: Request, res: Response) => {
 
     const budgetData: any = {
       ...data,
-      status: BudgetStatus.UNDER_PROCESS,
+      status: status || BudgetStatus.UNDER_PROCESS,
       transactionDate: new Date(data.transactionDate),
       account: { connect: { id: accountId } },
       owner: { connect: { id: userId } }
@@ -89,7 +89,7 @@ export const getBudgets = async (req: Request, res: Response) => {
         transactions: true
       },
       orderBy: {
-        transactionDate: 'desc'
+        createdAt: 'desc'
       }
     });
 
