@@ -2,17 +2,20 @@ import { budgetApi } from "@/services/budget";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Budget, CreateBudgetInput, UpdateBudgetInput } from "@cashbook/utils";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function useBudget() {
   const queryClient = useQueryClient();
+  const [params, setParams] = useState({});
 
   const {
-    data: budgets,
+    data,
     isLoading,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["budgets"],
-    queryFn: budgetApi.getAll,
+    queryKey: ["budgets", params],
+    queryFn: () => budgetApi.getAll(params),
   });
 
   const createBudget = useMutation({
@@ -52,11 +55,15 @@ export function useBudget() {
   });
 
   return {
-    budgets,
+    credit: data?.credit || [],
+    debit: data?.debit || [],
     isLoading,
     error,
     createBudget,
     updateBudget,
     updateBudgetStatus,
+    setParams,
+    params,
+    refetch,
   };
 }

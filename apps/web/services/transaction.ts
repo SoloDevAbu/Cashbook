@@ -6,8 +6,8 @@ import type {
 } from "@cashbook/utils";
 
 export const transactionsApi = {
-  getAll: async (): Promise<Transaction[]> => {
-    const response = await api.get("/api/transactions");
+  getAll: async (params = {}): Promise<{ credit: Transaction[]; debit: Transaction[] }> => {
+    const response = await api.get("/api/transactions", { params });
     return response.data;
   },
   create: async (

@@ -2,8 +2,8 @@ import { api } from "@/lib/api-client";
 import { Budget, CreateBudgetInput, UpdateBudgetInput } from "@cashbook/utils";
 
 export const budgetApi = {
-  getAll: async (): Promise<Budget[]> => {
-    const response = await api.get("/api/budgets");
+  getAll: async (params = {}): Promise<{ credit: Budget[]; debit: Budget[] }> => {
+    const response = await api.get("/api/budgets", { params });
     return response.data;
   },
   create: async (input: CreateBudgetInput): Promise<Budget> => {

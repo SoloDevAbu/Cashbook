@@ -79,25 +79,53 @@ export const getTransactions = async (req: Request, res: Response) => {
   }
 
   try {
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        ownerId: userId
-      },
+    const {
+      startDate,
+      endDate,
+      accountId,
+      headerId,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = req.query;
+
+    const where: any = { ownerId: userId };
+    if (startDate) {
+      where.transactionDate = { ...where.transactionDate, gte: new Date(startDate as string) };
+    }
+    if (endDate) {
+      where.transactionDate = { ...where.transactionDate, lte: new Date(endDate as string) };
+    }
+    if (accountId) {
+      where.accountId = accountId;
+    }
+    if (headerId) {
+      where.headerId = headerId;
+    }
+    if (search) {
+      where.OR = [
+        { details: { contains: search, mode: 'insensitive' } },
+        { transferId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const allTransactions = await prisma.transaction.findMany({
+      where,
       include: {
         account: true,
         header: true,
         tag: true,
         entity: true,
         budget: true,
-        receipts: true
+        receipts: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
+      },
     });
 
     const transactionsWithSignedUrls = await Promise.all(
-      transactions.map(async (transaction) => {
+      allTransactions.map(async (transaction) => {
         if (transaction.receipts && transaction.receipts.length > 0) {
           const receiptsWithUrls = await Promise.all(
             transaction.receipts.map(async (receipt) => {
@@ -122,7 +150,10 @@ export const getTransactions = async (req: Request, res: Response) => {
       })
     );
 
-    res.json(transactionsWithSignedUrls);
+    const credit = transactionsWithSignedUrls.filter(t => t.type === 'CREDIT');
+    const debit = transactionsWithSignedUrls.filter(t => t.type === 'DEBIT');
+
+    res.json({ credit, debit });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     res.status(500).json({ message: "Internal server error" });

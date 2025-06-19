@@ -77,23 +77,54 @@ export const getBudgets = async (req: Request, res: Response) => {
   }
 
   try {
-    const budgets = await prisma.budget.findMany({
-      where: {
-        ownerId: userId
-      },
+    const {
+      startDate,
+      endDate,
+      accountId,
+      headerId,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = req.query;
+
+    const where: any = { ownerId: userId };
+    if (startDate) {
+      where.transactionDate = { ...where.transactionDate, gte: new Date(startDate as string) };
+    }
+    if (endDate) {
+      where.transactionDate = { ...where.transactionDate, lte: new Date(endDate as string) };
+    }
+    if (accountId) {
+      where.accountId = accountId;
+    }
+    if (headerId) {
+      where.headerId = headerId;
+    }
+    if (search) {
+      where.OR = [
+        { details: { contains: search, mode: 'insensitive' } },
+        { transferId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const allBudgets = await prisma.budget.findMany({
+      where,
       include: {
         account: true,
         header: true,
         tag: true,
         entity: true,
-        transactions: true
+        transactions: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
+      },
     });
 
-    res.json(budgets);
+    const credit = allBudgets.filter(b => b.type === 'CREDIT');
+    const debit = allBudgets.filter(b => b.type === 'DEBIT');
+
+    res.json({ credit, debit });
   } catch (error) {
     console.error("Error fetching budgets:", error);
     res.status(500).json({ message: "Internal server error" });

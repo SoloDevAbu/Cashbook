@@ -2,17 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Transaction, CreateTransactionInput, UpdateTransactionInput } from "@cashbook/utils";
 import { transactionsApi } from "@/services/transaction";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function useTransactions() {
   const queryClient = useQueryClient();
+  const [params, setParams] = useState({});
 
-    const {
-    data: transactions,
+  const {
+    data,
     isLoading,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: transactionsApi.getAll
+    queryKey: ["transactions", params],
+    queryFn: () => transactionsApi.getAll(params),
   });
 
   const createTransaction = useMutation({
@@ -61,13 +64,16 @@ export function useTransactions() {
   });
 
   return {
-    transactions,
+    credit: data?.credit || [],
+    debit: data?.debit || [],
     isLoading,
     error,
     createTransaction,
     updateTransaction,
     updateTransactionStatus,
     uploadReceipt,
+    setParams,
+    params,
+    refetch,
   }
-
 }
