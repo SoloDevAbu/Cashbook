@@ -2,11 +2,30 @@ import { z } from "zod";
 import {TransactionAccountType} from "@cashbook/db";
 
 export const createAccountSchema = z.object({
-  type: z.enum([TransactionAccountType.CASH, TransactionAccountType.BANK_CREDIT, TransactionAccountType.BANK_SB, TransactionAccountType.CREDIT_CARD, TransactionAccountType.DEMAT, TransactionAccountType.LOAN, TransactionAccountType.TRADING, TransactionAccountType.UPI, TransactionAccountType.OTHER]),
+  type: z.enum([
+    TransactionAccountType.CASH,
+    TransactionAccountType.BANK_CREDIT,
+    TransactionAccountType.BANK_SB,
+    TransactionAccountType.CREDIT_CARD,
+    TransactionAccountType.DEMAT,
+    TransactionAccountType.LOAN,
+    TransactionAccountType.TRADING,
+    TransactionAccountType.UPI,
+    TransactionAccountType.OTHER
+  ]),
   name: z.string().min(1, "Account name is required"),
   accountNumber: z.string(),
   details: z.string().optional(),
-  upiLinks: z.array(z.string().url("Invalid UPI link format")).optional()
+  upiLinks: z
+    .array(
+      z
+        .string()
+        .refine(
+          (val) => val === "" || z.string().url().safeParse(val).success,
+          { message: "Invalid UPI link format" }
+        )
+    )
+    .optional()
 });
 
 export const updateAccountSchema = createAccountSchema.partial();

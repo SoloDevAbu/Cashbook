@@ -1,15 +1,19 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import * as SelectPrimitive from '@radix-ui/react-select';
-import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from '@radix-ui/react-icons';
+import * as React from "react";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CheckIcon,
+} from "@radix-ui/react-icons";
 
 const Select = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className = '', children, ...props }, ref) => (
+>(({ className = "", children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
@@ -26,7 +30,7 @@ SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className = '', children, position = 'popper', ...props }, ref) => (
+>(({ className = "", children, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -51,7 +55,7 @@ SelectContent.displayName = SelectPrimitive.Content.displayName;
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className = '', children, ...props }, ref) => (
+>(({ className = "", children, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
     className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${className}`}
@@ -77,8 +81,70 @@ interface SelectInputProps {
   placeholder?: string;
 }
 
-export const SelectInput = React.forwardRef<HTMLButtonElement, SelectInputProps>(
-  ({ label, error, options, value, onChange, disabled, placeholder }, ref) => {
+export const SelectInput = React.forwardRef<
+  HTMLButtonElement,
+  SelectInputProps
+>(({ label, error, options, value, onChange, disabled, placeholder }, ref) => {
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label}
+        </label>
+      )}
+      <Select value={value || undefined} onValueChange={onChange}>
+        <SelectTrigger ref={ref} disabled={disabled}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value || "_empty_"}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  );
+});
+
+SelectInput.displayName = "SelectInput";
+
+interface SelectInputWithCreateProps extends SelectInputProps {
+  onCreateNew?: () => void;
+  createButtonText?: string;
+}
+
+export const SelectInputWithCreate = React.forwardRef<
+  HTMLButtonElement,
+  SelectInputWithCreateProps
+>(
+  (
+    {
+      label,
+      error,
+      options,
+      value,
+      onChange,
+      disabled,
+      placeholder,
+      onCreateNew,
+      createButtonText = "Create New",
+    },
+    ref
+  ) => {
+    const [open, setOpen] = React.useState(false);
+
+    const handleCreateNew = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+      requestAnimationFrame(() => {
+        onCreateNew?.();
+      });
+    };
+
     return (
       <div className="space-y-2">
         {label && (
@@ -86,19 +152,33 @@ export const SelectInput = React.forwardRef<HTMLButtonElement, SelectInputProps>
             {label}
           </label>
         )}
-        <Select value={value || undefined} onValueChange={onChange}>
+        <Select
+          value={value || undefined}
+          onValueChange={onChange}
+          open={open}
+          onOpenChange={setOpen}
+        >
           <SelectTrigger ref={ref} disabled={disabled}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
-              <SelectItem 
-                key={option.value} 
-                value={option.value || '_empty_'}
-              >
+              <SelectItem key={option.value} value={option.value || "_empty_"}>
                 {option.label}
               </SelectItem>
             ))}
+
+            {onCreateNew && (
+              <>
+                <div className="h-px bg-gray-200 my-1" />
+                <button
+                  onClick={handleCreateNew}
+                  className="flex justify-center w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none text-blue-600 font-semibold"
+                >
+                  {createButtonText}
+                </button>
+              </>
+            )}
           </SelectContent>
         </Select>
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -107,4 +187,4 @@ export const SelectInput = React.forwardRef<HTMLButtonElement, SelectInputProps>
   }
 );
 
-SelectInput.displayName = 'SelectInput';
+SelectInputWithCreate.displayName = "SelectInputWithCreate";

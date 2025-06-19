@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React from "react";
+import { useForm, Controller } from "react-hook-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from '@/components/ui/input';
@@ -17,17 +18,27 @@ export function CreateTagDialog({
   onOpenChange,
   onSubmit,
 }: CreateTagDialogProps) {
-  const [name, setName] = useState("");
-  const [details, setDetails] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    control,
+  } = useForm<CreateTagInput>({
+    defaultValues: {
+      name: "",
+      details: "",
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    onSubmit({
-      name,
-      details,
-    });
-    setName("");
-    setDetails("");
+  const handleFormSubmit = async (data: CreateTagInput) => {
+    try {
+      await onSubmit(data);
+      reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating Tag:', error);
+    }
   };
 
   return (
@@ -36,22 +47,28 @@ export function CreateTagDialog({
         <DialogHeader>
           <DialogTitle>Create New Tag</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              value={name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+              {...register("name", { required: "Name is required" })}
+              error={errors.name?.message}
               required
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="details">Details</Label>
-            <Textarea
-              id="details"
-              value={details}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDetails(e.target.value)}
+            <Controller
+              name="details"
+              control={control}
+              render={({ field }) => (
+                <Textarea
+                  id="details"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
           <div className="flex justify-end space-x-2">
@@ -59,10 +76,13 @@ export function CreateTagDialog({
               type="button"
               variant="secondary"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create"}
+            </Button>
           </div>
         </form>
       </DialogContent>
