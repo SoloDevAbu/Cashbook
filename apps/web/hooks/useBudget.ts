@@ -1,8 +1,71 @@
 import { budgetApi } from "@/services/budget";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { Budget, CreateBudgetInput, UpdateBudgetInput } from "@cashbook/utils";
 import { toast } from "sonner";
 import { useState } from "react";
+import { api } from "@/lib/api-client";
+
+interface BudgetPage {
+  items: Budget[];
+  nextCursor: string | null;
+}
+
+type BudgetType = "credit" | "debit";
+
+interface BudgetApiResponse {
+  credit: {
+    items: Budget[];
+    nextCursor: string | null;
+  };
+  debit: {
+    items: Budget[];
+    nextCursor: string | null;
+  };
+}
+
+async function fetchBudgetPage(
+  type: BudgetType,
+  filters: Record<string, string | undefined>,
+  pageParam?: string
+): Promise<BudgetPage> {
+  // Only include filters with a value
+  const params: Record<string, string> = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params[key] = value;
+  });
+  if (pageParam) params[`${type}Cursor`] = pageParam;
+
+  const response = await api.get<BudgetApiResponse>('/api/budgets', { params });
+
+  return {
+    items: response.data[type].items,
+    nextCursor: response.data[type].nextCursor,
+  };
+}
+
+export function useBudgetsInfinite(filters: Record<string, string | undefined>) {
+  const credit = useInfiniteQuery<
+    { items: Budget[]; nextCursor: string | null },
+    unknown
+  >({
+    queryKey: ["budgets", "credit", filters],
+    queryFn: async ({ pageParam }) => fetchBudgetPage("credit", filters, pageParam as string),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined,
+  });
+
+  const debit = useInfiniteQuery<
+    { items: Budget[]; nextCursor: string | null },
+    unknown
+  >({
+    queryKey: ["budgets", "debit", filters],
+    queryFn: async ({ pageParam }) => fetchBudgetPage("debit", filters, pageParam as string),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined,
+  });
+
+  return { credit, debit };
+}
 
 export function useBudget() {
   const queryClient = useQueryClient();

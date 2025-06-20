@@ -85,44 +85,68 @@ export const getBudgets = async (req: Request, res: Response) => {
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      limit = 30,
+      creditCursor,
+      debitCursor,
     } = req.query;
 
-    const where: any = { ownerId: userId };
+    const baseWhere: any = { ownerId: userId };
     if (startDate) {
-      where.transactionDate = { ...where.transactionDate, gte: new Date(startDate as string) };
+      baseWhere.transactionDate = { ...baseWhere.transactionDate, gte: new Date(startDate as string) };
     }
     if (endDate) {
-      where.transactionDate = { ...where.transactionDate, lte: new Date(endDate as string) };
+      baseWhere.transactionDate = { ...baseWhere.transactionDate, lte: new Date(endDate as string) };
     }
     if (accountId) {
-      where.accountId = accountId;
+      baseWhere.accountId = accountId;
     }
     if (headerId) {
-      where.headerId = headerId;
+      baseWhere.headerId = headerId;
     }
     if (search) {
-      where.OR = [
+      baseWhere.OR = [
         { details: { contains: search, mode: 'insensitive' } },
         { transferId: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    const allBudgets = await prisma.budget.findMany({
-      where,
-      include: {
-        account: true,
-        header: true,
-        tag: true,
-        entity: true,
-        transactions: true,
-      },
-      orderBy: {
-        [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
-      },
-    });
+    // Helper to fetch paginated budgets by type
+    const fetchBudgets = async (type: 'CREDIT' | 'DEBIT', cursor: string | undefined) => {
+      const where = { ...baseWhere, type };
+      const query: any = {
+        where,
+        include: {
+          account: true,
+          header: true,
+          tag: true,
+          entity: true,
+          transactions: true,
+        },
+        orderBy: {
+          [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
+        },
+        take: Number(limit) + 1,
+      };
+      if (cursor) {
+        query.cursor = { id: cursor };
+        query.skip = 1;
+      }
+      const items = await prisma.budget.findMany(query);
+      let nextCursor = null;
+      if (items.length > Number(limit)) {
+        const nextItem = items[Number(limit)];
+        if (nextItem && nextItem.id) {
+          nextCursor = nextItem.id;
+        }
+        items.pop();
+      }
+      return { items, nextCursor };
+    };
 
-    const credit = allBudgets.filter(b => b.type === 'CREDIT');
-    const debit = allBudgets.filter(b => b.type === 'DEBIT');
+    const [credit, debit] = await Promise.all([
+      fetchBudgets('CREDIT', creditCursor as string | undefined),
+      fetchBudgets('DEBIT', debitCursor as string | undefined),
+    ]);
 
     res.json({ credit, debit });
   } catch (error) {
