@@ -87,48 +87,81 @@ export const getTransactions = async (req: Request, res: Response) => {
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      limit = 2,
+      creditCursor,
+      debitCursor
     } = req.query;
 
-    const where: any = { ownerId: userId };
+    const baseWhere: any = { ownerId: userId };
     if (startDate) {
-      where.transactionDate = { ...where.transactionDate, gte: new Date(startDate as string) };
+      baseWhere.transactionDate = { ...baseWhere.transactionDate, gte: new Date(startDate as string) };
     }
     if (endDate) {
-      where.transactionDate = { ...where.transactionDate, lte: new Date(endDate as string) };
+      baseWhere.transactionDate = { ...baseWhere.transactionDate, lte: new Date(endDate as string) };
     }
     if (accountId) {
-      where.accountId = accountId;
+      baseWhere.accountId = accountId;
     }
     if (headerId) {
-      where.headerId = headerId;
+      baseWhere.headerId = headerId;
     }
     if (search) {
-      where.OR = [
+      baseWhere.OR = [
         { details: { contains: search, mode: 'insensitive' } },
         { transferId: { contains: search, mode: 'insensitive' } },
       ];
     }
 
-    const allTransactions = await prisma.transaction.findMany({
-      where,
-      include: {
-        account: true,
-        header: true,
-        tag: true,
-        entity: true,
-        budget: true,
-        receipts: true,
-      },
-      orderBy: {
-        [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
-      },
-    });
+    const fetchTransaction = async (type: 'CREDIT' | 'DEBIT', cursor: string | undefined) => {
+      const where = { ...baseWhere, type };
+      const query: any = {
+        where,
+        include: {
+          account: true,
+          header: true,
+          tag: true,
+          entity: true,
+          budget: true,
+          receipts: true
+        },
+        orderBy: {
+          [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
+        },
+        take: Number(limit) + 1,
+      };
+
+      if (cursor) {
+        query.cursor = { id: cursor };
+        query.skip = 1;
+      }
+
+      const items = await prisma.transaction.findMany(query);
+      let nextCursor = null;
+      if (items.length > Number(limit)) {
+        const nextItem = items[Number(limit)];
+        if (nextItem && nextItem.id) {
+          nextCursor = nextItem.id;
+        }
+        items.pop();
+      }
+      return { items, nextCursor };
+    };
+
+    const [creditTransaction, debitTransaction] = await Promise.all([
+      fetchTransaction('CREDIT', creditCursor as string | undefined),
+      fetchTransaction('DEBIT', debitCursor as string | undefined),
+    ])
+
+    const allTransactions = [
+      ...creditTransaction.items,
+      ...debitTransaction.items
+    ];
 
     const transactionsWithSignedUrls = await Promise.all(
-      allTransactions.map(async (transaction) => {
+      allTransactions.map(async (transaction: any) => {
         if (transaction.receipts && transaction.receipts.length > 0) {
           const receiptsWithUrls = await Promise.all(
-            transaction.receipts.map(async (receipt) => {
+            transaction.receipts.map(async (receipt: any) => {
               try {
                 const signedUrl = await getSignedUrl(receipt.container, receipt.blobName);
                 return {
@@ -150,8 +183,8 @@ export const getTransactions = async (req: Request, res: Response) => {
       })
     );
 
-    const credit = transactionsWithSignedUrls.filter(t => t.type === 'CREDIT');
-    const debit = transactionsWithSignedUrls.filter(t => t.type === 'DEBIT');
+    const credit = transactionsWithSignedUrls.filter((t: any) => t.type === 'CREDIT');
+    const debit = transactionsWithSignedUrls.filter((t: any) => t.type === 'DEBIT');
 
     res.json({ credit, debit });
   } catch (error) {

@@ -55,7 +55,6 @@ export function BudgetLedger({ items, hasMore, onLoadMore, onEdit, onStatusChang
         <table className="min-w-full border border-gray-300 bg-white rounded-lg">
           <thead>
             <tr className="bg-gray-100 text-xs text-gray-700">
-              <th className="px-3 py-2 border-b">Type</th>
               <th className="px-3 py-2 border-b">Amount</th>
               <th className="px-3 py-2 border-b">Details</th>
               <th className="px-3 py-2 border-b">PAN</th>
@@ -76,7 +75,6 @@ export function BudgetLedger({ items, hasMore, onLoadMore, onEdit, onStatusChang
               const entity = sourceDestinations?.find(e => e.id === budget.entityId);
               return (
                 <tr key={budget.id} className="border-b hover:bg-gray-50 text-sm">
-                  <td className="px-3 py-2">{budget.type}</td>
                   <td className="px-3 py-2">{budget.amount}</td>
                   <td className="px-3 py-2">{budget.details}</td>
                   <td className="px-3 py-2">{budget.transferId}</td>

@@ -28,7 +28,6 @@ async function fetchBudgetPage(
   filters: Record<string, string | undefined>,
   pageParam?: string
 ): Promise<BudgetPage> {
-  // Only include filters with a value
   const params: Record<string, string> = {};
   Object.entries(filters).forEach(([key, value]) => {
     if (value) params[key] = value;

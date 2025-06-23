@@ -1,8 +1,70 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { Transaction, CreateTransactionInput, UpdateTransactionInput } from "@cashbook/utils";
 import { transactionsApi } from "@/services/transaction";
 import { toast } from "sonner";
 import { useState } from "react";
+import { api } from "@/lib/api-client";
+
+interface TransactionPage {
+  items: Transaction[];
+  nextCursor: string | null;
+}
+
+type TransactionType = "credit" | "debit";
+
+interface TransactionApiResponse {
+  credit: {
+    items: Transaction[];
+    nextCursor: string | null;
+  };
+  debit: {
+    items: Transaction[];
+    nextCursor: string | null;
+  };
+}
+
+async function fetchTransactionPage(
+  type: TransactionType,
+  filters: Record<string, string | undefined>,
+  pageParam?: string
+): Promise<TransactionPage> {
+  const params: Record<string, string> = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params[key] = value;
+  });
+  if (pageParam) params[`${type}Cursor`] = pageParam;
+
+  const response = await api.get<TransactionApiResponse>('/api/transactions', { params });
+
+  return {
+    items: response.data[type].items,
+    nextCursor: response.data[type].nextCursor,
+  };
+}
+
+export function useTransactionsInfinite(filters: Record<string, string | undefined>) {
+  const credit = useInfiniteQuery<
+    { items: Transaction[]; nextCursor: string | null },
+    unknown
+  >({
+    queryKey: ["transactions", "credit", filters],
+    queryFn: async ({ pageParam }) => fetchTransactionPage("credit", filters, pageParam as string),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined,
+  });
+
+  const debit = useInfiniteQuery<
+    { items: Transaction[]; nextCursor: string | null },
+    unknown
+  >({
+    queryKey: ["transactions", "debit", filters],
+    queryFn: async ({ pageParam }) => fetchTransactionPage("debit", filters, pageParam as string),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined,
+  });
+
+  return { credit, debit };
+}
 
 export function useTransactions() {
   const queryClient = useQueryClient();

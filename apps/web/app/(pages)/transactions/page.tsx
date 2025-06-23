@@ -2,15 +2,15 @@
 
 import { CreateTransactionDialog } from "@/components/transaction/CreateTransactionDialog";
 import { EditTransactionDialog } from "@/components/transaction/EditTransactionDialog";
-import { TransactionLedger } from "@/components/transaction/TransactionLedger";
 import { Button } from "@/components/ui/Button";
-import { useTransactions } from "@/hooks/useTransactions";
+import { useTransactions, useTransactionsInfinite } from "@/hooks/useTransactions";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useHeaders } from "@/hooks/useHeaders";
 import { SelectInputWithCreate } from "@cashbook/ui";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { CreateTransactionInput, Transaction } from "@cashbook/utils";
+import { TransactionLedgerInfinite } from "@/components/transaction/TransactionLedgerInfinite";
 
 export default function TransactionsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -19,30 +19,27 @@ export default function TransactionsPage() {
   const { accounts, isLoading: isLoadingAccounts } = useAccounts();
   const { headers, isLoading: isLoadingHeaders } = useHeaders();
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [accountId, setAccountId] = useState("");
-  const [headerId, setHeaderId] = useState("");
-  const [search, setSearch] = useState("");
-
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    accountId: "",
+    headerId: "",
+    search: "",
+  });
+  
   const {
-    credit,
-    debit,
-    isLoading,
-    error,
     createTransaction,
     updateTransaction,
     updateTransactionStatus,
-    setParams,
   } = useTransactions();
+  
+  const { credit, debit } = useTransactionsInfinite(filters);
+
+  const isLoading = credit.isLoading || debit.isLoading;
+  const error = credit.error || debit.error;
 
   const handleClear = () => {
-    setStartDate("");
-    setEndDate("");
-    setAccountId("");
-    setHeaderId("");
-    setSearch("");
-    setParams({
+    setFilters({
       startDate: "",
       endDate: "",
       accountId: "",
@@ -84,9 +81,9 @@ export default function TransactionsPage() {
             <input
               type="date"
               className="border rounded px-2 py-1 w-full"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              max={endDate || undefined}
+              value={filters.startDate}
+              onChange={e => setFilters({ ...filters, startDate: e.target.value })}
+              max={filters.endDate || undefined}
             />
           </div>
           <div className="flex flex-col gap-1 min-w-[160px]">
@@ -94,16 +91,16 @@ export default function TransactionsPage() {
             <input
               type="date"
               className="border rounded px-2 py-1 w-full"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              min={startDate || undefined}
+              value={filters.endDate}
+              onChange={e => setFilters({ ...filters, endDate: e.target.value })}
+              min={filters.startDate || undefined}
             />
           </div>
           <div className="flex flex-col gap-1 min-w-[180px]">
             <SelectInputWithCreate
               label="Account"
-              value={accountId}
-              onChange={setAccountId}
+              value={filters.accountId}
+              onChange={val => setFilters(f => ({ ...f, accountId: val }))}
               options={accounts?.map((account) => ({ value: account.id, label: account.name })) || []}
               placeholder="Sort by Account"
               disabled={isLoadingAccounts}
@@ -112,8 +109,8 @@ export default function TransactionsPage() {
           <div className="flex flex-col gap-1 min-w-[180px]">
             <SelectInputWithCreate
               label="Header"
-              value={headerId}
-              onChange={setHeaderId}
+              value={filters.headerId}
+              onChange={val => setFilters(f => ({ ...f, headerId: val }))}
               options={headers?.map((header) => ({ value: header.id, label: header.name })) || []}
               placeholder="Sort by Header"
               disabled={isLoadingHeaders}
@@ -124,8 +121,8 @@ export default function TransactionsPage() {
             <input
               type="text"
               className="border border-gray-500 rounded px-2 py-1 w-full"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={filters.search}
+              onChange={e => setFilters({ ...filters, search: e.target.value })}
               placeholder="Search by details or PAN"
             />
           </div>
@@ -133,13 +130,8 @@ export default function TransactionsPage() {
         <div className="flex justify-center gap-4 mt-2">
           <Button
             onClick={() => {
-              setParams({
-                startDate: startDate || undefined,
-                endDate: endDate || undefined,
-                accountId: accountId || undefined,
-                headerId: headerId || undefined,
-                search: search || undefined,
-              });
+              credit.refetch();
+              debit.refetch();
             }}
             className="px-6"
           >
@@ -155,12 +147,12 @@ export default function TransactionsPage() {
       </div>
 
       <div>
-        {credit.length > 0 && debit.length > 0 ? (
+        {credit.data?.pages && credit.data.pages.length > 0 && debit.data?.pages && debit.data.pages.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h2 className="text-lg font-semibold mb-2">Credit Transactions</h2>
-              <TransactionLedger
-                transactions={credit}
+              <TransactionLedgerInfinite
+                query={credit}
                 onEdit={setEditTransaction}
                 onStatusChange={(transaction, status) => {
                   updateTransactionStatus.mutate({
@@ -172,8 +164,8 @@ export default function TransactionsPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold mb-2">Debit Transactions</h2>
-              <TransactionLedger
-                transactions={debit}
+              <TransactionLedgerInfinite
+                query={debit}
                 onEdit={setEditTransaction}
                 onStatusChange={(transaction, status) => {
                   updateTransactionStatus.mutate({
@@ -184,11 +176,11 @@ export default function TransactionsPage() {
               />
             </div>
           </div>
-        ) : credit.length > 0 ? (
-          <div>
+        ) : credit.data?.pages && credit.data.pages.length > 0 ? (
+          <div className="w-full">
             <h2 className="text-lg font-semibold mb-2">Credit Transactions</h2>
-            <TransactionLedger
-              transactions={credit}
+            <TransactionLedgerInfinite
+              query={credit}
               onEdit={setEditTransaction}
               onStatusChange={(transaction, status) => {
                 updateTransactionStatus.mutate({
@@ -198,11 +190,11 @@ export default function TransactionsPage() {
               }}
             />
           </div>
-        ) : debit.length > 0 ? (
-          <div>
+        ) : debit.data?.pages && debit.data.pages.length > 0 ? (
+          <div className="w-full">
             <h2 className="text-lg font-semibold mb-2">Debit Transactions</h2>
-            <TransactionLedger
-              transactions={debit}
+            <TransactionLedgerInfinite
+              query={debit}
               onEdit={setEditTransaction}
               onStatusChange={(transaction, status) => {
                 updateTransactionStatus.mutate({
